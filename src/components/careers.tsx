@@ -58,9 +58,9 @@ function apiItems(jobs: PublicJobPostListItem[], locale: Locale): CareerListItem
       // Presentation-only: preserve the old careers-page colour rhythm without
       // inventing or altering backend JobPost data.
       tint: ROLE_TINTS[(tintOffset + occurrence) % ROLE_TINTS.length],
-      detailHref: localePath(`/tuyen-dung/${job.id}`, locale),
+      detailHref: localePath(`/tuyen-dung/${job.slug}`, locale),
       applyHref: localePath(
-        `/ung-tuyen?jobPostId=${encodeURIComponent(job.id)}`,
+        `/ung-tuyen?jobSlug=${encodeURIComponent(job.slug)}`,
         locale,
       ),
     };
@@ -70,8 +70,8 @@ function apiItems(jobs: PublicJobPostListItem[], locale: Locale): CareerListItem
 /**
  * `/tuyen-dung` — public job list.
  *
- * Both locales come from `GET /api/v1/public/job-posts?locale=...`. TDD-031 adds
- * public detail by JobPost id, so API-backed rows link to `/tuyen-dung/<id>`.
+ * Both locales come from `GET /api/v1/public/job-posts?lang=...`. TDD-052 defines
+ * public detail by JobPost slug, so API-backed rows link to `/tuyen-dung/<slug>`.
  *
  * PERKS and STEPS stay local by contract: TDD-030 explicitly treats benefits and
  * the hiring process as website copy rather than JobPost data.

@@ -21,9 +21,10 @@ import { PublicApiError } from "@/server/api/client";
  * "ngân sách dự kiến" and had nowhere to put a CV. See `src/lib/application-form.ts`.
  *
  * TDD-032 v1.1 only accepts a concrete backend JobPost id. Every API-backed
- * "Ứng tuyển" link carries `?jobPostId=<uuid>`; this page resolves that id again
- * from the public JobPost API before showing a submit-capable form. A missing,
- * malformed, deleted or unavailable id never turns into a free application.
+ * "Ứng tuyển" link carries `?jobSlug=<slug>`; this page resolves that slug from
+ * the public JobPost API before showing a submit-capable form. The response's
+ * UUID is then passed to the form as `jobPostId`, which is still the value sent
+ * to the application API.
  *
  * `searchParams` makes this dynamic per request. That is the cost of the
  * preselect and it is free in practice — the page is a form, there is nothing to
@@ -34,13 +35,11 @@ import { PublicApiError } from "@/server/api/client";
  * what happens next without losing their place.
  */
 
-const GUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-async function loadSelectedJob(value: string | undefined, locale: Locale) {
-  if (!value || !GUID.test(value)) return null;
+async function loadSelectedJob(slug: string | undefined, locale: Locale) {
+  if (!slug?.trim()) return null;
 
   try {
-    return await getPublicJobPostDetail(value, locale);
+    return await getPublicJobPostDetail(slug, locale);
   } catch (error) {
     if (error instanceof PublicApiError && (error.status === 404 || error.status === 409)) {
       return null;
@@ -69,9 +68,9 @@ export default async function UngTuyenPage({
 }) {
   const { locale } = await routeParams;
   const params = await searchParams;
-  const rawJobPostId = params.jobPostId;
-  const jobPostId = Array.isArray(rawJobPostId) ? rawJobPostId[0] : rawJobPostId;
-  const job = await loadSelectedJob(jobPostId, locale);
+  const rawJobSlug = params.jobSlug;
+  const jobSlug = Array.isArray(rawJobSlug) ? rawJobSlug[0] : rawJobSlug;
+  const job = await loadSelectedJob(jobSlug, locale);
   let availableJobs: PublicJobPostListItem[] = [];
 
   if (!job) {
@@ -98,7 +97,7 @@ export default async function UngTuyenPage({
           <nav aria-label={t(CAREERS_UI.breadcrumbNav, locale)} className="mx-auto max-w-6xl px-5 sm:px-8">
             <Link
               href={localePath(
-                job ? `/tuyen-dung/${job.id}` : "/tuyen-dung",
+                job ? `/tuyen-dung/${job.slug}` : "/tuyen-dung",
                 locale,
               )}
               className="inline-flex items-center gap-2 font-pixel text-sm uppercase tracking-[0.2em] text-ink-soft transition-colors duration-200 hover:text-ember"
@@ -186,7 +185,7 @@ export default async function UngTuyenPage({
                     </li>
                   </ul>
                   <Link
-                    href={localePath(`/tuyen-dung/${job.id}`, locale)}
+                    href={localePath(`/tuyen-dung/${job.slug}`, locale)}
                     className="mt-5 inline-flex items-center gap-2 font-pixel text-sm uppercase tracking-[0.15em] text-ink-soft transition-colors duration-200 hover:text-ember"
                   >
                     {t(APPLY_UI.seeFullJd, locale)} <span aria-hidden>▸</span>
@@ -201,7 +200,7 @@ export default async function UngTuyenPage({
                     {availableJobs.map((r) => (
                       <li key={r.id}>
                         <Link
-                          href={localePath(`/tuyen-dung/${r.id}`, locale)}
+                          href={localePath(`/tuyen-dung/${r.slug}`, locale)}
                           className="group block"
                         >
                           <span className="block font-viet text-sm font-semibold leading-snug text-ink transition-colors duration-200 group-hover:text-ember">

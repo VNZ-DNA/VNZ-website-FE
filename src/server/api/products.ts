@@ -43,7 +43,7 @@ export interface PublicProductListResponse {
  * does not re-filter or re-sort either products or content blocks.
  */
 export function getPublicProducts(locale: Locale) {
-  const query = new URLSearchParams({ locale });
+  const query = new URLSearchParams({ lang: locale });
 
   return publicApiGet<PublicProductListResponse>(
     `/api/v1/public/products?${query.toString()}`,

@@ -8,6 +8,7 @@ export interface PublicNewsCategory {
 
 export interface PublicNewsListItem {
   id: string;
+  slug: string;
   title: string;
   summary: string | null;
   publishAt: string;
@@ -30,7 +31,7 @@ export interface PublicNewsDetail extends PublicNewsListItem {
 
 export function getPublicNews(locale: Locale, page = 1, pageSize = 5) {
   const query = new URLSearchParams({
-    locale,
+    lang: locale,
     page: String(page),
     pageSize: String(pageSize),
   });
@@ -40,11 +41,11 @@ export function getPublicNews(locale: Locale, page = 1, pageSize = 5) {
   });
 }
 
-export function getPublicNewsDetail(id: string, locale: Locale) {
-  const query = new URLSearchParams({ locale });
+export function getPublicNewsDetail(slug: string, locale: Locale) {
+  const query = new URLSearchParams({ lang: locale });
 
   return publicApiGet<PublicNewsDetail>(
-    `/api/v1/public/news/${encodeURIComponent(id)}?${query.toString()}`,
+    `/api/v1/public/news/${encodeURIComponent(slug)}?${query.toString()}`,
     {
     noStore: true,
     },

@@ -27,6 +27,7 @@ const CATEGORY_TINTS: Record<string, string> = {
 
 type DetailView = {
   id: string;
+  slug: string;
   title: string;
   summaryHtml: string | null;
   summaryText: string | null;
@@ -58,6 +59,7 @@ function tintForCategories(categories: PublicNewsCategory[]) {
 function apiDetailView(post: PublicNewsDetail): DetailView {
   return {
     id: post.id,
+    slug: post.slug,
     title: post.title,
     summaryHtml: post.summary,
     summaryText: null,
@@ -70,9 +72,9 @@ function apiDetailView(post: PublicNewsDetail): DetailView {
   };
 }
 
-async function loadDetail(locale: Locale, id: string) {
+async function loadDetail(locale: Locale, slug: string) {
   try {
-    return apiDetailView(await getNewsDetail(id, locale));
+    return apiDetailView(await getNewsDetail(slug, locale));
   } catch (error) {
     if (error instanceof PublicApiError && (error.status === 400 || error.status === 404)) return null;
     throw error;
@@ -180,7 +182,7 @@ async function relatedPosts(locale: Locale, currentId: string): Promise<RelatedP
         title: post.title,
         categories: post.categories.map((category) => category.name),
         tint: tintForCategories(post.categories),
-        href: localePath(`/tin-tuc/${post.id}`, locale),
+        href: localePath(`/tin-tuc/${post.slug}`, locale),
       }));
   } catch (error) {
     console.error("[tin-tuc/detail] failed to load related public news", error);

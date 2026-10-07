@@ -23,6 +23,7 @@ const FALLBACK_TINTS = [
 
 type NewsCard = {
   id: string;
+  slug: string;
   title: string;
   summaryHtml: string | null;
   summaryText: string | null;
@@ -67,6 +68,7 @@ function apiTint(post: PublicNewsListItem, index: number) {
 function apiCards(items: PublicNewsListItem[], locale: Locale): NewsCard[] {
   return items.map((post, index) => ({
     id: post.id,
+    slug: post.slug,
     title: post.title,
     summaryHtml: post.summary,
     summaryText: null,
@@ -78,7 +80,7 @@ function apiCards(items: PublicNewsListItem[], locale: Locale): NewsCard[] {
       : null,
     categories: post.categories.map((category) => category.name),
     tint: apiTint(post, index),
-    detailHref: localePath(`/tin-tuc/${post.id}`, locale),
+    detailHref: localePath(`/tin-tuc/${post.slug}`, locale),
   }));
 }
 

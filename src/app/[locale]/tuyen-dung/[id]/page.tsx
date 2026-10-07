@@ -17,8 +17,6 @@ import { PublicApiError } from "@/server/api/client";
 
 const getJobDetail = cache(getPublicJobPostDetail);
 
-const GUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 const DEPARTMENT_TINTS: Record<string, string> = {
   "Kỹ thuật": "var(--color-jade)",
   "Sản phẩm": "var(--color-gold)",
@@ -26,6 +24,7 @@ const DEPARTMENT_TINTS: Record<string, string> = {
 
 type DetailViewModel = {
   id: string;
+  slug: string;
   title: string;
   department: string | null;
   employmentType: string | null;
@@ -70,6 +69,7 @@ function formatDateOnly(value: string, locale: Locale) {
 function apiDetailView(job: PublicJobPostDetail, locale: Locale): DetailViewModel {
   return {
     id: job.id,
+    slug: job.slug,
     title: job.title,
     department: job.department,
     employmentType: job.employmentType,
@@ -81,7 +81,7 @@ function apiDetailView(job: PublicJobPostDetail, locale: Locale): DetailViewMode
     requirementItems: multilineItems(job.requirements),
     expiredDate: job.expiredDate,
     tint: job.department ? DEPARTMENT_TINTS[job.department] ?? "var(--color-ember)" : "var(--color-ember)",
-    applyHref: localePath(`/ung-tuyen?jobPostId=${encodeURIComponent(job.id)}`, locale),
+    applyHref: localePath(`/ung-tuyen?jobSlug=${encodeURIComponent(job.slug)}`, locale),
   };
 }
 
@@ -97,15 +97,13 @@ function apiOtherRoles(
       title: job.title,
       department: job.department,
       numberOfPositions: job.numberOfPositions,
-      href: localePath(`/tuyen-dung/${job.id}`, locale),
+      href: localePath(`/tuyen-dung/${job.slug}`, locale),
     }));
 }
 
-async function loadDetail(locale: Locale, id: string) {
-  if (!GUID.test(id)) return null;
-
+async function loadDetail(locale: Locale, slug: string) {
   try {
-    return apiDetailView(await getJobDetail(id, locale), locale);
+    return apiDetailView(await getJobDetail(slug, locale), locale);
   } catch (error) {
     if (error instanceof PublicApiError && error.status === 404) return null;
     throw error;
@@ -117,8 +115,8 @@ export async function generateMetadata({
 }: {
   params: Promise<{ locale: Locale; id: string }>;
 }): Promise<Metadata> {
-  const { locale, id } = await params;
-  const role = await loadDetail(locale, id);
+  const { locale, id: slug } = await params;
+  const role = await loadDetail(locale, slug);
 
   if (!role) return { title: t(META.roleNotFound, locale) };
 
@@ -171,8 +169,8 @@ export default async function RolePage({
 }: {
   params: Promise<{ locale: Locale; id: string }>;
 }) {
-  const { locale, id } = await params;
-  const role = await loadDetail(locale, id);
+  const { locale, id: slug } = await params;
+  const role = await loadDetail(locale, slug);
   if (!role) notFound();
 
   let others: OtherRole[] = [];
@@ -342,7 +340,7 @@ export default async function RolePage({
                     label={t(CAREERS_UI.factDeadline, locale)}
                     value={
                       role.expiredDate
-                        ? locale === "vi" && GUID.test(role.id)
+                        ? locale === "vi"
                           ? formatDateOnly(role.expiredDate, locale)
                           : role.expiredDate
                         : null
